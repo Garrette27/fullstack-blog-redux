@@ -15,6 +15,7 @@ export const BlogEdit = () => {
   const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export const BlogEdit = () => {
       setTitle(currentBlog.title);
       setContent(currentBlog.content);
       setImagePreview(currentBlog.image_url);
+      setRemoveImage(false);
     }
   }, [currentBlog]);
 
@@ -45,12 +47,19 @@ export const BlogEdit = () => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      setRemoveImage(false);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setRemoveImage(true);
+    setImageFile(null);
+    setImagePreview(null);
   };
 
   const uploadImage = async (): Promise<string | null> => {
@@ -82,6 +91,13 @@ export const BlogEdit = () => {
     if (!id) return;
 
     let imageUrl: string | null = currentBlog?.image_url || null;
+
+    // If user chose to remove the image and didn't upload a new one,
+    // clear the image URL.
+    if (removeImage && !imageFile) {
+      imageUrl = null;
+    }
+
     if (imageFile) {
       imageUrl = await uploadImage();
     }
@@ -150,7 +166,16 @@ export const BlogEdit = () => {
             style={styles.fileInput}
           />
           {imagePreview && (
-            <img src={imagePreview} alt="Preview" style={styles.preview} />
+            <div style={styles.imageWrapper}>
+              <img src={imagePreview} alt="Preview" style={styles.preview} />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                style={styles.removeImageButton}
+              >
+                Remove Image
+              </button>
+            </div>
           )}
         </div>
         {error && <p style={styles.error}>{error}</p>}
@@ -229,6 +254,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '100%',
     maxHeight: '300px',
     borderRadius: '4px',
+  },
+  imageWrapper: {
+    marginTop: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
+  removeImageButton: {
+    alignSelf: 'flex-start',
+    padding: '0.5rem 1rem',
+    backgroundColor: '#d32f2f',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
   },
   error: {
     color: '#d32f2f',
