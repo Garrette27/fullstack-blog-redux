@@ -5,9 +5,9 @@ interface BlogState {
   blogs: Blog[];
   currentBlog: Blog | null;
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
+    page: number; // Current page (dispatch updates it)
+    limit: number; // Records per page (5)
+    total: number; // Server says "there are 47 total blogs"
   };
   loading: boolean;
   error: string | null;
