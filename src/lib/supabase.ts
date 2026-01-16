@@ -24,3 +24,13 @@ export interface User {
   id: string;
   email: string;
 }
+
+export interface Comment {
+  id: string;
+  blog_id: string;
+  user_id: string;
+  content: string;
+  file_url: string | null;
+  created_at: string;
+  updated_at: string;
+}

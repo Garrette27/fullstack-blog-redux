@@ -2,20 +2,26 @@ import { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchBlogById, deleteBlog, clearCurrentBlog } from '../store/slices/blogSlice';
+import { fetchComments, clearComments } from '../store/slices/commentSlice';
+import { CommentForm } from '../components/CommentForm';
+import { CommentItem } from '../components/CommentItem';
 
 export const BlogView = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { currentBlog, loading } = useAppSelector((state) => state.blogs);
-  const { user } = useAppSelector((state) => state.auth);
+  const { comments, loading: commentsLoading } = useAppSelector((state) => state.comments);
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (id) {
       dispatch(fetchBlogById(id));
+      dispatch(fetchComments(id));
     }
     return () => {
       dispatch(clearCurrentBlog());
+      dispatch(clearComments());
     };
   }, [dispatch, id]);
 
@@ -74,6 +80,34 @@ export const BlogView = () => {
           </div>
         )}
       </article>
+
+      {/* Comments Section */}
+      <div style={styles.commentsSection}>
+        <h2 style={styles.commentsTitle}>Comments ({comments.length})</h2>
+        
+        {isAuthenticated ? (
+          <div style={styles.commentFormContainer}>
+            <h3 style={styles.commentFormTitle}>Add a comment</h3>
+            <CommentForm blogId={currentBlog.id} />
+          </div>
+        ) : (
+          <p style={styles.loginPrompt}>
+            <Link to="/login" style={styles.loginLink}>Login</Link> to post a comment
+          </p>
+        )}
+
+        {commentsLoading ? (
+          <p>Loading comments...</p>
+        ) : comments.length === 0 ? (
+          <p style={styles.noComments}>No comments yet. Be the first to comment!</p>
+        ) : (
+          <div style={styles.commentsList}>
+            {comments.map((comment) => (
+              <CommentItem key={comment.id} comment={comment} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -142,5 +176,49 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  commentsSection: {
+    marginTop: '2rem',
+    backgroundColor: '#fff',
+    padding: '2rem',
+    borderRadius: '8px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+  },
+  commentsTitle: {
+    marginBottom: '1.5rem',
+    color: '#333',
+    fontSize: '1.5rem',
+  },
+  commentFormContainer: {
+    marginBottom: '2rem',
+    padding: '1rem',
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+  },
+  commentFormTitle: {
+    marginBottom: '1rem',
+    color: '#333',
+    fontSize: '1rem',
+  },
+  loginPrompt: {
+    marginBottom: '1.5rem',
+    color: '#666',
+    textAlign: 'center',
+    padding: '1rem',
+    backgroundColor: '#f5f5f5',
+    borderRadius: '4px',
+  },
+  loginLink: {
+    color: '#333',
+    textDecoration: 'underline',
+    fontWeight: '500',
+  },
+  noComments: {
+    textAlign: 'center',
+    color: '#666',
+    padding: '2rem',
+  },
+  commentsList: {
+    marginTop: '1rem',
   },
 };
